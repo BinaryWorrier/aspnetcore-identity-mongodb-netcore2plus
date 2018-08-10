@@ -1,7 +1,8 @@
 ﻿namespace IntegrationTests
 {
 	using System.Threading.Tasks;
-	using Microsoft.AspNetCore.Identity.MongoDB;
+    using CoreTests;
+    using Microsoft.AspNetCore.Identity.MongoDB;
 	using NUnit.Framework;
 
 	[TestFixture]
@@ -10,7 +11,7 @@
 		[Test]
 		public async Task Create_NewUser_HasNoEmail()
 		{
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 
@@ -22,7 +23,7 @@
 		[Test]
 		public async Task SetEmail_SetsEmail()
 		{
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 
@@ -34,7 +35,7 @@
 		[Test]
 		public async Task FindUserByEmail_ReturnsUser()
 		{
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 			Expect(await manager.FindByEmailAsync("email"), Is.Null);
@@ -48,7 +49,7 @@
 		public async Task Create_NewUser_IsNotEmailConfirmed()
 		{
 			var manager = GetUserManager();
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			await manager.CreateAsync(user);
 
 			var isConfirmed = await manager.IsEmailConfirmedAsync(user);
@@ -60,7 +61,7 @@
 		public async Task SetEmailConfirmed_IsConfirmed()
 		{
 			var manager = GetUserManager();
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			await manager.CreateAsync(user);
 			var token = await manager.GenerateEmailConfirmationTokenAsync(user);
 
@@ -74,7 +75,7 @@
 		public async Task ChangeEmail_AfterConfirmedOriginalEmail_NotEmailConfirmed()
 		{
 			var manager = GetUserManager();
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			await manager.CreateAsync(user);
 			var token = await manager.GenerateEmailConfirmationTokenAsync(user);
 			await manager.ConfirmEmailAsync(user, token);

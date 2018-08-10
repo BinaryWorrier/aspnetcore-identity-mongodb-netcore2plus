@@ -13,7 +13,7 @@
 		public async Task Create_NewRole_Saves()
 		{
 			var roleName = "admin";
-			var role = new IdentityRole(roleName);
+			var role = new IdentityRoleObjectId(roleName);
 			var manager = GetRoleManager();
 
 			await manager.CreateAsync(role);
@@ -27,7 +27,7 @@
 		public async Task FindByName_SavedRole_ReturnsRole()
 		{
 			var roleName = "name";
-			var role = new IdentityRole {Name = roleName};
+			var role = new IdentityRoleObjectId { Name = roleName};
 			var manager = GetRoleManager();
 			await manager.CreateAsync(role);
 
@@ -41,13 +41,13 @@
 		[Test]
 		public async Task FindById_SavedRole_ReturnsRole()
 		{
-			var roleId = ObjectId.GenerateNewId().ToString();
-			var role = new IdentityRole {Name = "name"};
+			var roleId = ObjectId.GenerateNewId();
+			var role = new IdentityRoleObjectId { Name = "name"};
 			role.Id = roleId;
 			var manager = GetRoleManager();
 			await manager.CreateAsync(role);
 
-			var foundRole = await manager.FindByIdAsync(roleId);
+			var foundRole = await manager.FindByIdAsync(roleId.ToString());
 
 			Expect(foundRole, Is.Not.Null);
 			Expect(foundRole.Id, Is.EqualTo(roleId));
@@ -56,7 +56,7 @@
 		[Test]
 		public async Task Delete_ExistingRole_Removes()
 		{
-			var role = new IdentityRole {Name = "name"};
+			var role = new IdentityRoleObjectId { Name = "name"};
 			var manager = GetRoleManager();
 			await manager.CreateAsync(role);
 			Expect(Roles.FindAll(), Is.Not.Empty);
@@ -69,10 +69,10 @@
 		[Test]
 		public async Task Update_ExistingRole_Updates()
 		{
-			var role = new IdentityRole {Name = "name"};
+			var role = new IdentityRoleObjectId { Name = "name"};
 			var manager = GetRoleManager();
 			await manager.CreateAsync(role);
-			var savedRole = await manager.FindByIdAsync(role.Id);
+			var savedRole = await manager.FindByIdAsync(role.Id.ToString());
 			savedRole.Name = "newname";
 
 			await manager.UpdateAsync(savedRole);
@@ -85,14 +85,14 @@
 		[Test]
 		public async Task SimpleAccessorsAndGetters()
 		{
-			var role = new IdentityRole
-			{
+			var role = new IdentityRoleObjectId
+            {
 				Name = "name"
 			};
 			var manager = GetRoleManager();
 			await manager.CreateAsync(role);
 
-			Expect(await manager.GetRoleIdAsync(role), Is.EqualTo(role.Id));
+			Expect(await manager.GetRoleIdAsync(role), Is.EqualTo(role.Id.ToString()));
 			Expect(await manager.GetRoleNameAsync(role), Is.EqualTo("name"));
 
 			await manager.SetRoleNameAsync(role, "newName");

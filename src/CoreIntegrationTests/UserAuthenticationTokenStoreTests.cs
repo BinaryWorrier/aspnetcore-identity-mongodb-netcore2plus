@@ -1,7 +1,8 @@
 ﻿namespace CoreIntegrationTests
 {
 	using System.Threading.Tasks;
-	using IntegrationTests;
+    using CoreTests;
+    using IntegrationTests;
 	using Microsoft.AspNetCore.Identity.MongoDB;
 	using NUnit.Framework;
 
@@ -11,7 +12,7 @@
 		public async Task SetGetAndRemoveTokens()
 		{
 			// note: this is just an integration test, testing of IdentityUser behavior is in domain/unit tests
-			var user = new IdentityUser();
+			var user = new IdentityUserObjectId();
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 

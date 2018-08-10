@@ -8,10 +8,14 @@
 	[TestFixture]
 	public class IdentityRoleTests : AssertionHelper
 	{
-		[Test]
+        public IdentityRoleTests()
+        {
+        }
+
+        [Test]
 		public void ToBsonDocument_IdAssigned_MapsToBsonObjectId()
 		{
-			var role = new IdentityRole();
+			var role = new IdentityRoleObjectId();
 
 			var document = role.ToBsonDocument();
 
@@ -21,9 +25,9 @@
 		[Test]
 		public void Create_WithoutRoleName_HasIdAssigned()
 		{
-			var role = new IdentityRole();
+			var role = new IdentityRoleObjectId();
 
-			var parsed = role.Id.SafeParseObjectId();
+			var parsed = role.Id;
 			Expect(parsed, Is.Not.Null);
 			Expect(parsed, Is.Not.EqualTo(ObjectId.Empty));
 		}
@@ -33,7 +37,7 @@
 		{
 			var name = "admin";
 
-			var role = new IdentityRole(name);
+			var role = new IdentityRoleObjectId(name);
 
 			Expect(role.Name, Is.EqualTo(name));
 		}
@@ -41,9 +45,9 @@
 		[Test]
 		public void Create_WithRoleName_SetsId()
 		{
-			var role = new IdentityRole("admin");
+			var role = new IdentityRoleObjectId("admin");
 
-			var parsed = role.Id.SafeParseObjectId();
+			var parsed = role.Id;
 			Expect(parsed, Is.Not.Null);
 			Expect(parsed, Is.Not.EqualTo(ObjectId.Empty));
 		}

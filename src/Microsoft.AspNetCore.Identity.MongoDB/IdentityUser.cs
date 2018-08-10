@@ -8,19 +8,27 @@
 	using global::MongoDB.Bson;
 	using global::MongoDB.Bson.Serialization.Attributes;
 
-	public class IdentityUser
+    public class IdentityUser<TId>: IdentityUserBase
+    {
+        public IdentityUser(TId id)
+        {
+            Id = id;
+        }
+
+        public virtual TId Id { get; set; }
+
+    }
+
+    public abstract class IdentityUserBase
 	{
-		public IdentityUser()
+		public IdentityUserBase()
 		{
-			Id = ObjectId.GenerateNewId().ToString();
 			Roles = new List<string>();
 			Logins = new List<IdentityUserLogin>();
 			Claims = new List<IdentityUserClaim>();
 			Tokens = new List<IdentityUserToken>();
 		}
 
-		[BsonRepresentation(BsonType.ObjectId)]
-		public virtual string Id { get; set; }
 
 		public virtual string UserName { get; set; }
 

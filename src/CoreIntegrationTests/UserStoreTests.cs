@@ -2,7 +2,8 @@
 {
 	using System.Linq;
 	using System.Threading.Tasks;
-	using Microsoft.AspNetCore.Identity.MongoDB;
+    using CoreTests;
+    using Microsoft.AspNetCore.Identity.MongoDB;
 	using MongoDB.Bson;
 	using NUnit.Framework;
 
@@ -14,7 +15,7 @@
 		public async Task Create_NewUser_Saves()
 		{
 			var userName = "name";
-			var user = new IdentityUser {UserName = userName};
+			var user = new IdentityUserObjectId { UserName = userName};
 			var manager = GetUserManager();
 
 			await manager.CreateAsync(user);
@@ -27,7 +28,7 @@
 		public async Task FindByName_SavedUser_ReturnsUser()
 		{
 			var userName = "name";
-			var user = new IdentityUser {UserName = userName};
+			var user = new IdentityUserObjectId { UserName = userName};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 
@@ -50,13 +51,13 @@
 		[Test]
 		public async Task FindById_SavedUser_ReturnsUser()
 		{
-			var userId = ObjectId.GenerateNewId().ToString();
-			var user = new IdentityUser {UserName = "name"};
+			var userId = ObjectId.GenerateNewId();
+			var user = new IdentityUserObjectId { UserName = "name"};
 			user.Id = userId;
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 
-			var foundUser = await manager.FindByIdAsync(userId);
+			var foundUser = await manager.FindByIdAsync(userId.ToString());
 
 			Expect(foundUser, Is.Not.Null);
 			Expect(foundUser.Id, Is.EqualTo(userId));
@@ -85,7 +86,7 @@
 		[Test]
 		public async Task Delete_ExistingUser_Removes()
 		{
-			var user = new IdentityUser {UserName = "name"};
+			var user = new IdentityUserObjectId { UserName = "name"};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 			Expect(Users.FindAll(), Is.Not.Empty);
@@ -98,10 +99,10 @@
 		[Test]
 		public async Task Update_ExistingUser_Updates()
 		{
-			var user = new IdentityUser {UserName = "name"};
+			var user = new IdentityUserObjectId { UserName = "name"};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
-			var savedUser = await manager.FindByIdAsync(user.Id);
+			var savedUser = await manager.FindByIdAsync(user.Id.ToString());
 			savedUser.UserName = "newname";
 
 			await manager.UpdateAsync(savedUser);
@@ -114,14 +115,14 @@
 		[Test]
 		public async Task SimpleAccessorsAndGetters()
 		{
-			var user = new IdentityUser
-			{
+			var user = new IdentityUserObjectId
+            {
 				UserName = "username"
 			};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 
-			Expect(await manager.GetUserIdAsync(user), Is.EqualTo(user.Id));
+            Expect(await manager.GetUserIdAsync(user), Is.EqualTo(user.Id.ToString()));
 			Expect(await manager.GetUserNameAsync(user), Is.EqualTo("username"));
 
 			await manager.SetUserNameAsync(user, "newUserName");

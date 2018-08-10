@@ -12,13 +12,13 @@
 		[Test]
 		public void EnsureUniqueIndexes()
 		{
-			EnsureUniqueIndex<IdentityUser>(IndexChecks.OptionalIndexChecks.EnsureUniqueIndexOnUserName, "UserName");
-			EnsureUniqueIndex<IdentityUser>(IndexChecks.OptionalIndexChecks.EnsureUniqueIndexOnEmail, "Email");
-			EnsureUniqueIndex<IdentityRole>(IndexChecks.OptionalIndexChecks.EnsureUniqueIndexOnRoleName, "Name");
+			EnsureUniqueIndex<IdentityUserObjectId>(IndexChecks.OptionalIndexChecks.EnsureUniqueIndexOnUserName, "UserName");
+			EnsureUniqueIndex<IdentityUserObjectId>(IndexChecks.OptionalIndexChecks.EnsureUniqueIndexOnEmail, "Email");
+			EnsureUniqueIndex<IdentityRoleObjectId>(IndexChecks.OptionalIndexChecks.EnsureUniqueIndexOnRoleName, "Name");
 
-			EnsureUniqueIndex<IdentityUser>(IndexChecks.EnsureUniqueIndexOnNormalizedUserName, "NormalizedUserName");
-			EnsureUniqueIndex<IdentityUser>(IndexChecks.EnsureUniqueIndexOnNormalizedEmail, "NormalizedEmail");
-			EnsureUniqueIndex<IdentityRole>(IndexChecks.EnsureUniqueIndexOnNormalizedRoleName, "NormalizedName");
+			EnsureUniqueIndex<IdentityUserObjectId>(IndexChecks.EnsureUniqueIndexOnNormalizedUserName, "NormalizedUserName");
+			EnsureUniqueIndex<IdentityUserObjectId>(IndexChecks.EnsureUniqueIndexOnNormalizedEmail, "NormalizedEmail");
+			EnsureUniqueIndex<IdentityRoleObjectId>(IndexChecks.EnsureUniqueIndexOnNormalizedRoleName, "NormalizedName");
 		}
 
 		private void EnsureUniqueIndex<TCollection>(Action<IMongoCollection<TCollection>> addIndex, string indexedField)

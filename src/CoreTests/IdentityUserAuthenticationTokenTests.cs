@@ -8,7 +8,7 @@
 		[Test]
 		public void GetToken_NoTokens_ReturnsNull()
 		{
-			var user = new IdentityUser();
+			var user = new Microsoft.AspNetCore.Identity.MongoDB.IdentityUserObjectId();
 
 			var value = user.GetTokenValue("loginProvider", "tokenName");
 
@@ -18,7 +18,7 @@
 		[Test]
 		public void GetToken_WithToken_ReturnsValueIfProviderAndNameMatch()
 		{
-			var user = new IdentityUser();
+			var user = new Microsoft.AspNetCore.Identity.MongoDB.IdentityUserObjectId();
 			user.SetToken("loginProvider", "tokenName", "tokenValue");
 
 			Expect(user.GetTokenValue("loginProvider", "tokenName"),
@@ -34,7 +34,7 @@
 		[Test]
 		public void RemoveToken_OnlyRemovesIfNameAndProviderMatch()
 		{
-			var user = new IdentityUser();
+			var user = new Microsoft.AspNetCore.Identity.MongoDB.IdentityUserObjectId();
 			user.SetToken("loginProvider", "tokenName", "tokenValue");
 
 			user.RemoveToken("wrongProvider", "tokenName");
@@ -53,7 +53,7 @@
 		[Test]
 		public void SetToken_ReplacesValue()
 		{
-			var user = new IdentityUser();
+			var user = new Microsoft.AspNetCore.Identity.MongoDB.IdentityUserObjectId();
 			user.SetToken("loginProvider", "tokenName", "tokenValue");
 
 			user.SetToken("loginProvider", "tokenName", "updatedValue");

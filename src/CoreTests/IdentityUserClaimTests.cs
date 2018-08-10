@@ -33,7 +33,7 @@
 		public void ReplaceClaim_NoExistingClaim_Ignores()
 		{
 			// note: per EF implemention - only existing claims are updated by looping through them so that impl ignores too
-			var user = new IdentityUser();
+			var user = new IdentityUserObjectId();
 			var newClaim = new Claim("newType", "newValue");
 
 			user.ReplaceClaim(newClaim, newClaim);
@@ -44,7 +44,7 @@
 		[Test]
 		public void ReplaceClaim_ExistingClaim_Replaces()
 		{
-			var user = new IdentityUser();
+			var user = new IdentityUserObjectId();
 			var firstClaim = new Claim("type", "value");
 			user.AddClaim(firstClaim);
 			var newClaim = new Claim("newType", "newValue");
@@ -57,7 +57,7 @@
 		[Test]
 		public void ReplaceClaim_ValueMatchesButTypeDoesNot_DoesNotReplace()
 		{
-			var user = new IdentityUser();
+			var user = new IdentityUserObjectId();
 			var firstClaim = new Claim("type", "sameValue");
 			user.AddClaim(firstClaim);
 			var newClaim = new Claim("newType", "sameValue");
@@ -70,7 +70,7 @@
 		[Test]
 		public void ReplaceClaim_TypeMatchesButValueDoesNot_DoesNotReplace()
 		{
-			var user = new IdentityUser();
+			var user = new IdentityUserObjectId();
 			var firstClaim = new Claim("sameType", "value");
 			user.AddClaim(firstClaim);
 			var newClaim = new Claim("sameType", "newValue");

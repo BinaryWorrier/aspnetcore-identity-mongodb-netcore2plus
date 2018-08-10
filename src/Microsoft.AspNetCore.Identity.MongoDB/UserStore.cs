@@ -11,13 +11,15 @@ namespace Microsoft.AspNetCore.Identity.MongoDB
 	using System.Threading;
 	using System.Threading.Tasks;
 	using global::MongoDB.Bson;
-	using global::MongoDB.Driver;
+    using global::MongoDB.Bson.IO;
+    using global::MongoDB.Bson.Serialization;
+    using global::MongoDB.Driver;
 
 	/// <summary>
 	///     When passing a cancellation token, it will only be used if the operation requires a database interaction.
 	/// </summary>
 	/// <typeparam name="TUser"></typeparam>
-	public class UserStore<TUser> :
+	public abstract class UserStore<TUser, TId> :
 			IUserPasswordStore<TUser>,
 			IUserRoleStore<TUser>,
 			IUserLoginStore<TUser>,
@@ -31,13 +33,16 @@ namespace Microsoft.AspNetCore.Identity.MongoDB
             IUserAuthenticationTokenStore<TUser>,
             IUserAuthenticatorKeyStore<TUser>,
 			IUserTwoFactorRecoveryCodeStore<TUser>
-		where TUser : IdentityUser
+		where TUser : IdentityUser<TId>
 	{
 		private readonly IMongoCollection<TUser> _Users;
+        private readonly IMongoCollection<BsonDocument> _untypedUsers;
 
-		public UserStore(IMongoCollection<TUser> users)
+        public UserStore(IMongoCollection<TUser> users)
 		{
 			_Users = users;
+            if(_Users != null)
+                _untypedUsers = _Users.Database.GetCollection<BsonDocument>(_Users.CollectionNamespace.CollectionName);
 		}
 
 		public virtual void Dispose()
@@ -51,23 +56,28 @@ namespace Microsoft.AspNetCore.Identity.MongoDB
 			return IdentityResult.Success;
 		}
 
+        private FilterDefinition<BsonDocument> IdFilter<T>(TId id)
+        {
+            return Builders<BsonDocument>.Filter.Eq("_id", id);
+        }
+
 		public virtual async Task<IdentityResult> UpdateAsync(TUser user, CancellationToken token)
 		{
 			// todo should add an optimistic concurrency check
-			await _Users.ReplaceOneAsync(u => u.Id == user.Id, user, cancellationToken: token);
+			await _untypedUsers.ReplaceOneAsync(IdFilter<TId>(user.Id), user.ToBsonDocument(), cancellationToken: token);
 			// todo success based on replace result
 			return IdentityResult.Success;
 		}
 
 		public virtual async Task<IdentityResult> DeleteAsync(TUser user, CancellationToken token)
 		{
-			await _Users.DeleteOneAsync(u => u.Id == user.Id, token);
+			await _untypedUsers.DeleteOneAsync(IdFilter<TId>(user.Id), token);
 			// todo success based on delete result
 			return IdentityResult.Success;
 		}
 
 		public virtual async Task<string> GetUserIdAsync(TUser user, CancellationToken cancellationToken)
-			=> user.Id;
+			=> user.Id.ToString();
 
 		public virtual async Task<string> GetUserNameAsync(TUser user, CancellationToken cancellationToken)
 			=> user.UserName;
@@ -82,16 +92,24 @@ namespace Microsoft.AspNetCore.Identity.MongoDB
 		public virtual async Task SetNormalizedUserNameAsync(TUser user, string normalizedUserName, CancellationToken cancellationToken)
 			=> user.NormalizedUserName = normalizedUserName;
 
-		public virtual Task<TUser> FindByIdAsync(string userId, CancellationToken token)
-			=> IsObjectId(userId)
-				? _Users.Find(u => u.Id == userId).FirstOrDefaultAsync(token)
-				: Task.FromResult<TUser>(null);
+        public abstract bool TryParseId(string stringId, out TId id);
 
-		private bool IsObjectId(string id)
-		{
-			ObjectId temp;
-			return ObjectId.TryParse(id, out temp);
-		}
+        public virtual async Task<TUser> FindByIdAsync(string userId, CancellationToken token)
+        {
+            if (!TryParseId(userId, out var id))
+                return null;
+
+            var userDoc = await _untypedUsers.Find(IdFilter<TId>(id)).FirstOrDefaultAsync(token);
+            if (userDoc == null)
+                return null;
+
+            var serializer = BsonSerializer.SerializerRegistry.GetSerializer<TUser>();
+            using (var bsonReader = new BsonDocumentReader(userDoc))
+            {
+                var user = serializer.Deserialize(BsonDeserializationContext.CreateRoot(bsonReader));
+                return user;
+            }
+        }
 
 		public virtual Task<TUser> FindByNameAsync(string normalizedUserName, CancellationToken token)
 			// todo low priority exception on duplicates? or better to enforce unique index to ensure this

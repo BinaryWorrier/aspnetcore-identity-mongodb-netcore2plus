@@ -3,20 +3,24 @@
 	using global::MongoDB.Bson;
 	using global::MongoDB.Bson.Serialization.Attributes;
 
-	public class IdentityRole
+    public class IdentityRole<TId>: IdentityRoleBase
+    {
+        public IdentityRole(TId id)
+        {
+            Id = id;
+        }
+        public IdentityRole(string roleName, TId id) : this(id)
+        {
+            Name = roleName;
+        }
+        public TId Id { get; set; }
+
+    }
+    public class IdentityRoleBase
 	{
-		public IdentityRole()
+		public IdentityRoleBase()
 		{
-			Id = ObjectId.GenerateNewId().ToString();
 		}
-
-		public IdentityRole(string roleName) : this()
-		{
-			Name = roleName;
-		}
-
-		[BsonRepresentation(BsonType.ObjectId)]
-		public string Id { get; set; }
 
 		public string Name { get; set; }
 

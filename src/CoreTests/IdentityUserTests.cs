@@ -1,6 +1,7 @@
 ﻿namespace Tests
 {
-	using Microsoft.AspNetCore.Identity.MongoDB;
+    using CoreTests;
+    using Microsoft.AspNetCore.Identity.MongoDB;
 	using MongoDB.Bson;
 	using NUnit.Framework;
 
@@ -11,7 +12,7 @@
 		[Test]
 		public void ToBsonDocument_IdAssigned_MapsToBsonObjectId()
 		{
-			var user = new IdentityUser();
+			var user = new IdentityUserObjectId();
 
 			var document = user.ToBsonDocument();
 
@@ -21,9 +22,9 @@
 		[Test]
 		public void Create_NewIdentityUser_HasIdAssigned()
 		{
-			var user = new IdentityUser();
+			var user = new IdentityUserObjectId();
 
-			var parsed = user.Id.SafeParseObjectId();
+			var parsed = user.Id;
 			Expect(parsed, Is.Not.Null);
 			Expect(parsed, Is.Not.EqualTo(ObjectId.Empty));
 		}
@@ -31,11 +32,11 @@
 		[Test]
 		public void Create_NoPassword_DoesNotSerializePasswordField()
 		{
-			// if a particular consuming application doesn't intend to use passwords, there's no reason to store a null entry except for padding concerns, if that is the case then the consumer may want to create a custom class map to serialize as desired.
+            // if a particular consuming application doesn't intend to use passwords, there's no reason to store a null entry except for padding concerns, if that is the case then the consumer may want to create a custom class map to serialize as desired.
 
-			var user = new IdentityUser();
+            var user = new IdentityUserObjectId();
 
-			var document = user.ToBsonDocument();
+            var document = user.ToBsonDocument();
 
 			Expect(document.Contains("PasswordHash"), Is.False);
 		}
@@ -44,7 +45,7 @@
 		public void Create_NullLists_DoesNotSerializeNullLists()
 		{
 			// serialized nulls can cause havoc in deserialization, overwriting the constructor's initial empty list 
-			var user = new IdentityUser();
+			var user = new Microsoft.AspNetCore.Identity.MongoDB.IdentityUserObjectId();
 			user.Roles = null;
 			user.Tokens = null;
 			user.Logins = null;
@@ -61,7 +62,7 @@
 		[Test]
 		public void Create_NewIdentityUser_ListsNotNull()
 		{
-			var user = new IdentityUser();
+			var user = new Microsoft.AspNetCore.Identity.MongoDB.IdentityUserObjectId();
 
 			Expect(user.Logins, Is.Empty);
 			Expect(user.Tokens, Is.Empty);

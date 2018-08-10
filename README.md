@@ -2,14 +2,9 @@
 
 This is a MongoDB provider for the ASP.NET Core 2 Identity framework. This was ported from the v2 Identity framework that was a part of ASP.NET (AspNet.Identity.Mongo NuGet package)
 
-I've released a new package for the ASP.NET Core 2 Identity framework for the following reasons:
-- Discoverability - named AspNetCore.
-- ASP.NET Core 2 is a rewrite of ASP.NET, this Core Identity framework won't run on traditional ASP.NET.
-- Migrating isn't a matter of updating dependencies.
-
-This project has extensive test coverage. 
-
-If you want something easy to setup, this adapter is for you. I do not intend to cover every possible desirable configuration, if you don't like my decisions, write your own adapter. Use this as a learning tool to make your own adapter. These adapters are not complicated, but trying to make them configurable would become a complicated mess. And would confuse the majority of people that want something simple to use. So I'm favoring simplicity over making every last person happy.
+I've forked this from it's source repo, because the ids were strings on the user and role entities, which didn't suit my usecase.
+This library - out of the box - supports entities with ObjectIds or Guids as ids.
+You can - with a couple of lines of code - write your own derived User & Role stores with what ever typed Id floats your boat.
 
 ## Usage
 
@@ -17,6 +12,7 @@ If you want something easy to setup, this adapter is for you. I do not intend to
 - Then, in ConfigureServices--or wherever you are registering services--include the following to register both the Identity services and MongoDB stores:
 
 ```csharp
+/// Assumes you want ObjectIds as the User & Role Id
 services.AddIdentityWithMongoStores("mongodb://localhost/myDB");
 ```
 
@@ -24,8 +20,15 @@ services.AddIdentityWithMongoStores("mongodb://localhost/myDB");
 - Remember with the Identity framework, the whole point is that both a `UserManager` and `RoleManager` are provided for you to use, here's how you can resolve instances manually. Of course, constructor injection is also available.
 
 ```csharp
-var userManager = provider.GetService<UserManager<IdentityUser>>();
-var roleManager = provider.GetService<RoleManager<IdentityRole>>();
+var userManager = provider.GetService<UserManager<IdentityUserObjectId>>();
+var roleManager = provider.GetService<RoleManager<IdentityRoleObjectId>>();
+```
+
+or depending on your Id type
+
+```csharp
+var userManager = provider.GetService<UserManager<IdentityUserGuid>>();
+var roleManager = provider.GetService<RoleManager<IdentityRoleGuid>>();
 ```
 
 - The following methods help create indexes that will boost lookups by UserName, Email and role Name. These have changed since Identity v2 to refer to Normalized fields. I dislike this aspect of Core Identity, but it is what it is. Basically these three fields are stored in uppercase format for case insensitive searches.
@@ -36,8 +39,60 @@ var roleManager = provider.GetService<RoleManager<IdentityRole>>();
 	IndexChecks.EnsureUniqueIndexOnNormalizedRoleName(roles);
 ```
 
-- Here is a sample project, review the commit log for the steps taken to port the default template from EntityFramework MSSQL to MongoDB. [aspnetcore2-identity-mongo-sample](https://github.com/alextochetto/2017.02).
+## Rolling with your own Id type
 
+You want your Ids to be `DateTime`, I get it, `DateTime` is your thing
+
+Firstly specialise IdentityUser & IdentityRole for DateTime
+
+```csharp
+public class IdentityUserDateTime : IdentityUser<DateTime>
+{
+    public IdentityUserGuid() : base(DateTime.Now) {}
+}
+
+public class IdentityRoleDateTime : IdentityRole<DateTime>
+{
+    public IdentityUserRole() : base(DateTime.Now) {}
+}
+```
+
+Then specialise UserStore and RoleStore to use these types
+
+```csharp
+public class UserStoreDateTime<TUser> : UserStore<TRole, DateTime>
+    where TUser: IdentityRole<DateTime>
+{
+    public UserStoreDateTime(IMongoCollection<TUser> users)
+        : base(users){ }
+    public override bool TryParseId(string stringId, out Guid id)
+        => DateTime.TryParse(stringId, out id);
+}
+public class RoleStoreDateTime<TRole> : RoleStore<TRole, DateTime>
+    where TRole: IdentityRole<DateTime>
+{
+    public RoleStoreDateTime(IMongoCollection<TRole> roles)
+        : base(roles) { }
+    public override bool TryParseId(string stringId, out Guid id)
+        => DateTime.TryParse(stringId, out id);
+}
+```
+
+### Extending IdentityUser and/or IdentityRole with your own properties
+
+Simply create your entity and inherit from ours e.g.
+```csharp
+public class ApplicationUser: IdentityUserGuid
+{
+    public string FamilyName {get;set;}
+}
+
+/// and register it 
+services.AddIdentityWithMongoStoresUsingCustomTypesWithGuids<ApplicationUser, IdentityRoleGuid>(connectionString);
+```
+
+
+## Frameworks 
 What frameworks are targeted, with rationale:
 
 - Microsoft.AspNetCore.Identity - supports net461 and netstandard2.0
@@ -58,4 +113,4 @@ run [build.bat](./build.bat)
 	- On IdentityUser documents, create a NormalizedUserName field = uppercase(UserName) and create a NormalizedEmail field = uppercase(Email). Leave UserName and Email as is.
 
 # NuGet
-https://www.nuget.org/packages/Contrib.Microsoft.AspNetCore.Identity.MongoDB/
+https://www.nuget.org/packages/BinaryWorrier.Microsoft.AspNetCore.Identity.MongoDB/

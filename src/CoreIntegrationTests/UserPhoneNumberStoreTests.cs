@@ -1,7 +1,8 @@
 ﻿namespace IntegrationTests
 {
 	using System.Threading.Tasks;
-	using Microsoft.AspNetCore.Identity.MongoDB;
+    using CoreTests;
+    using Microsoft.AspNetCore.Identity.MongoDB;
 	using NUnit.Framework;
 
 	// todo low - validate all tests work
@@ -13,7 +14,7 @@
 		[Test]
 		public async Task SetPhoneNumber_StoresPhoneNumber()
 		{
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 
@@ -25,7 +26,7 @@
 		[Test]
 		public async Task ConfirmPhoneNumber_StoresPhoneNumberConfirmed()
 		{
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 			var token = await manager.GenerateChangePhoneNumberTokenAsync(user, PhoneNumber);
@@ -38,7 +39,7 @@
 		[Test]
 		public async Task ChangePhoneNumber_OriginalPhoneNumberWasConfirmed_NotPhoneNumberConfirmed()
 		{
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 			var token = await manager.GenerateChangePhoneNumberTokenAsync(user, PhoneNumber);

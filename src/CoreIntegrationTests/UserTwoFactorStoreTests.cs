@@ -1,7 +1,8 @@
 ﻿namespace IntegrationTests
 {
 	using System.Threading.Tasks;
-	using Microsoft.AspNetCore.Identity.MongoDB;
+    using CoreTests;
+    using Microsoft.AspNetCore.Identity.MongoDB;
 	using NUnit.Framework;
 
 	// todo low - validate all tests work
@@ -11,7 +12,7 @@
 		[Test]
 		public async Task SetTwoFactorEnabled()
 		{
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 
@@ -23,7 +24,7 @@
 		[Test]
 		public async Task ClearTwoFactorEnabled_PreviouslyEnabled_NotEnabled()
 		{
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			var manager = GetUserManager();
 			await manager.CreateAsync(user);
 			await manager.SetTwoFactorEnabledAsync(user, true);

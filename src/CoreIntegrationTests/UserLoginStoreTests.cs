@@ -2,7 +2,8 @@
 {
 	using System.Linq;
 	using System.Threading.Tasks;
-	using Microsoft.AspNetCore.Identity;
+    using CoreTests;
+    using Microsoft.AspNetCore.Identity;
 	using Microsoft.AspNetCore.Identity.MongoDB;
 	using NUnit.Framework;
 
@@ -15,7 +16,7 @@
 		{
 			var manager = GetUserManager();
 			var login = new UserLoginInfo("provider", "key", "name");
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			await manager.CreateAsync(user);
 
 			await manager.AddLoginAsync(user, login);
@@ -31,7 +32,7 @@
 		{
 			var manager = GetUserManager();
 			var login = new UserLoginInfo("provider", "key", "name");
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			await manager.CreateAsync(user);
 			await manager.AddLoginAsync(user, login);
 
@@ -46,7 +47,7 @@
 		{
 			var manager = GetUserManager();
 			var login = new UserLoginInfo("provider", "key", "name");
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			await manager.CreateAsync(user);
 			await manager.AddLoginAsync(user, login);
 
@@ -63,7 +64,7 @@
 		{
 			var manager = GetUserManager();
 			var login = new UserLoginInfo("provider", "key", "name");
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			await manager.CreateAsync(user);
 			await manager.AddLoginAsync(user, login);
 
@@ -77,7 +78,7 @@
 		{
 			var manager = GetUserManager();
 			var login = new UserLoginInfo("provider", "key", "name");
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			await manager.CreateAsync(user);
 			await manager.AddLoginAsync(user, login);
 
@@ -91,7 +92,7 @@
 		{
 			var manager = GetUserManager();
 			var login = new UserLoginInfo("provider", "key", "name");
-			var user = new IdentityUser {UserName = "bob"};
+			var user = new IdentityUserObjectId { UserName = "bob"};
 			await manager.CreateAsync(user);
 			await manager.AddLoginAsync(user, login);
 

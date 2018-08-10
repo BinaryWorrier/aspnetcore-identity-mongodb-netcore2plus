@@ -7,7 +7,10 @@ namespace Microsoft.AspNetCore.Identity.MongoDB
 	using System.Linq;
 	using System.Threading;
 	using System.Threading.Tasks;
-	using global::MongoDB.Driver;
+    using global::MongoDB.Bson;
+    using global::MongoDB.Bson.IO;
+    using global::MongoDB.Bson.Serialization;
+    using global::MongoDB.Driver;
 
 	/// <summary>
 	///     Note: Deleting and updating do not modify the roles stored on a user document. If you desire this dynamic
@@ -16,15 +19,18 @@ namespace Microsoft.AspNetCore.Identity.MongoDB
 	///     When passing a cancellation token, it will only be used if the operation requires a database interaction.
 	/// </summary>
 	/// <typeparam name="TRole">Needs to extend the provided IdentityRole type.</typeparam>
-	public class RoleStore<TRole> : IQueryableRoleStore<TRole>
+	public abstract class RoleStore<TRole, TId> : IQueryableRoleStore<TRole>
 		// todo IRoleClaimStore<TRole>
-		where TRole : IdentityRole
+		where TRole : IdentityRole<TId>
 	{
-		private readonly IMongoCollection<TRole> _Roles;
+        private readonly IMongoCollection<TRole> _Roles;
+        private readonly IMongoCollection<BsonDocument> _untypedRoles;
 
-		public RoleStore(IMongoCollection<TRole> roles)
+        public RoleStore(IMongoCollection<TRole> roles)
 		{
 			_Roles = roles;
+            if (_Roles != null)
+                _untypedRoles = _Roles.Database.GetCollection<BsonDocument>(_Roles.CollectionNamespace.CollectionName);
 		}
 
 		public virtual void Dispose()
@@ -38,22 +44,29 @@ namespace Microsoft.AspNetCore.Identity.MongoDB
 			return IdentityResult.Success;
 		}
 
-		public virtual async Task<IdentityResult> UpdateAsync(TRole role, CancellationToken token)
+        public abstract bool TryParseId(string stringId, out TId id);
+
+        private FilterDefinition<BsonDocument> IdFilter<T>(TId id)
+        {
+            return Builders<BsonDocument>.Filter.Eq("_id", id);
+        }
+
+        public virtual async Task<IdentityResult> UpdateAsync(TRole role, CancellationToken token)
 		{
-			var result = await _Roles.ReplaceOneAsync(r => r.Id == role.Id, role, cancellationToken: token);
+			var result = await _untypedRoles.ReplaceOneAsync(IdFilter<TId>(role.Id), role.ToBsonDocument(), cancellationToken: token);
 			// todo low priority result based on replace result
 			return IdentityResult.Success;
 		}
 
 		public virtual async Task<IdentityResult> DeleteAsync(TRole role, CancellationToken token)
 		{
-			var result = await _Roles.DeleteOneAsync(r => r.Id == role.Id, token);
+			var result = await _untypedRoles.DeleteOneAsync(IdFilter<TId>(role.Id), token);
 			// todo low priority result based on delete result
 			return IdentityResult.Success;
 		}
 
 		public virtual async Task<string> GetRoleIdAsync(TRole role, CancellationToken cancellationToken)
-			=> role.Id;
+			=> role.Id.ToString();
 
 		public virtual async Task<string> GetRoleNameAsync(TRole role, CancellationToken cancellationToken)
 			=> role.Name;
@@ -68,9 +81,21 @@ namespace Microsoft.AspNetCore.Identity.MongoDB
 		public virtual async Task SetNormalizedRoleNameAsync(TRole role, string normalizedName, CancellationToken cancellationToken)
 			=> role.NormalizedName = normalizedName;
 
-		public virtual Task<TRole> FindByIdAsync(string roleId, CancellationToken token)
-			=> _Roles.Find(r => r.Id == roleId)
-				.FirstOrDefaultAsync(token);
+        public virtual async Task<TRole> FindByIdAsync(string roleId, CancellationToken token)
+        {
+            if (!TryParseId(roleId, out var id))
+                return null;
+            var roleDoc = await _untypedRoles.Find(IdFilter<TId>(id)).FirstOrDefaultAsync();
+            if (roleDoc == null)
+                return null;
+
+            var serializer = BsonSerializer.SerializerRegistry.GetSerializer<TRole>();
+            using (var bsonReader = new BsonDocumentReader(roleDoc))
+            {
+                var user = serializer.Deserialize(BsonDeserializationContext.CreateRoot(bsonReader));
+                return user;
+            }
+        }
 
 		public virtual Task<TRole> FindByNameAsync(string normalizedName, CancellationToken token)
 			=> _Roles.Find(r => r.NormalizedName == normalizedName)

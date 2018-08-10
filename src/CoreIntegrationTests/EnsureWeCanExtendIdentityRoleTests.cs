@@ -2,7 +2,8 @@
 {
 	using System.Linq;
 	using System.Threading.Tasks;
-	using Microsoft.AspNetCore.Identity;
+    using CoreTests;
+    using Microsoft.AspNetCore.Identity;
 	using Microsoft.AspNetCore.Identity.MongoDB;
 	using Microsoft.Extensions.DependencyInjection;
 	using NUnit.Framework;
@@ -13,7 +14,7 @@
 		private RoleManager<ExtendedIdentityRole> _Manager;
 		private ExtendedIdentityRole _Role;
 
-		public class ExtendedIdentityRole : IdentityRole
+		public class ExtendedIdentityRole : IdentityRoleObjectId
 		{
 			public string ExtendedField { get; set; }
 		}
@@ -21,7 +22,7 @@
 		[SetUp]
 		public void BeforeEachTestAfterBase()
 		{
-			_Manager = CreateServiceProvider<IdentityUser, ExtendedIdentityRole>()
+			_Manager = CreateServiceProvider<IdentityUserObjectId, ExtendedIdentityRole>()
 				.GetService<RoleManager<ExtendedIdentityRole>>();
 			_Role = new ExtendedIdentityRole
 			{
@@ -47,7 +48,7 @@
 
 			await _Manager.CreateAsync(_Role);
 
-			var savedRole = await _Manager.FindByIdAsync(_Role.Id);
+			var savedRole = await _Manager.FindByIdAsync(_Role.Id.ToString());
 			Expect(savedRole.ExtendedField, Is.EqualTo("extendedField"));
 		}
 	}
