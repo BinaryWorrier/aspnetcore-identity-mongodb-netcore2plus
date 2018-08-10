@@ -11,13 +11,61 @@ namespace Microsoft.Extensions.DependencyInjection
 	public static class MongoIdentityBuilderExtensions
 	{
 
-		/// <summary>
-		///     This method only registers mongo stores, you also need to call AddIdentity.
-		///     Consider using AddIdentityWithMongoStores.
-		/// </summary>
-		/// <param name="builder"></param>
-		/// <param name="connectionString">Must contain the database name</param>
-		public static IdentityBuilder RegisterMongoStores<TUser, TId, TRole>(
+        /// <summary>
+        ///     This method only registers mongo stores, you also need to call AddIdentity.
+        ///     Assumes you want ObjectIds
+        ///     Consider using AddIdentityWithMongoStores.
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="connectionString">Must contain the database name</param>
+        public static IdentityBuilder RegisterMongoStores<TUser, TRole>(this IdentityBuilder builder, string connectionString)
+            where TRole : IdentityRoleObjectId
+            where TUser : IdentityUserObjectId
+        {
+            var url = new MongoUrl(connectionString);
+            var client = new MongoClient(url);
+            if (url.DatabaseName == null)
+            {
+                throw new ArgumentException("Your connection string must contain a database name", connectionString);
+            }
+            var database = client.GetDatabase(url.DatabaseName);
+            return builder.RegisterMongoStores(
+                p => database.GetCollection<TUser>("users"),
+                p => database.GetCollection<TRole>("roles"),
+                col => new UserStoreObjectId<TUser>(col),
+                col => new RoleStoreObjectId<TRole>(col));
+        }
+        /// <summary>
+        ///     This method only registers mongo stores, you also need to call AddIdentity.
+        ///     Consider using AddIdentityWithMongoStores.
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="connectionString">Must contain the database name</param>
+        public static IdentityBuilder RegisterMongoStoresWithGuids<TUser, TRole>(this IdentityBuilder builder, string connectionString)
+            where TRole : IdentityRoleGuid
+            where TUser : IdentityUserGuid
+        {
+            var url = new MongoUrl(connectionString);
+            var client = new MongoClient(url);
+            if (url.DatabaseName == null)
+            {
+                throw new ArgumentException("Your connection string must contain a database name", connectionString);
+            }
+            var database = client.GetDatabase(url.DatabaseName);
+            return builder.RegisterMongoStores(
+                p => database.GetCollection<TUser>("users"),
+                p => database.GetCollection<TRole>("roles"),
+                col => new UserStoreGuid<TUser>(col),
+                col => new RoleStoreGuid<TRole>(col));
+        }
+
+        /// <summary>
+        ///     This method only registers mongo stores, you also need to call AddIdentity.
+        ///     Consider using AddIdentityWithMongoStores.
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="connectionString">Must contain the database name</param>
+        public static IdentityBuilder RegisterMongoStores<TUser, TId, TRole>(
             this IdentityBuilder builder, 
             string connectionString, 
             Func<IMongoCollection<TUser>, UserStore<TUser, TId>> userStoreFactory,
@@ -119,11 +167,14 @@ namespace Microsoft.Extensions.DependencyInjection
                 .RegisterMongoStores<TUser, Guid, TRole>(connectionString, col => new UserStoreGuid<TUser>(col), col => new RoleStoreGuid<TRole>(col));
         }
 
+        
+
         public static IdentityBuilder RegisterMongoStores(this IServiceCollection services, string connectionString)
         {
             return services.AddIdentity<IdentityUserObjectId, IdentityRoleObjectId>()
                 .RegisterMongoStores<IdentityUserObjectId, ObjectId, IdentityRoleObjectId>(connectionString, col => new UserStoreObjectId<IdentityUserObjectId>(col), col => new RoleStoreObjectId<IdentityRoleObjectId>(col));
         }
+
 
         public static void DoReg()
         {
